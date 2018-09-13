@@ -34,6 +34,7 @@ int main( int argc, char* argv[] )
     char cfg_file[1024];
     memset( cfg_file, '\0', 100 );
     int option;
+    // 命令参数处理设置
     while ( ( option = getopt( argc, argv, "f:xvh" ) ) != -1 )
     {
         switch ( option )
@@ -67,6 +68,7 @@ int main( int argc, char* argv[] )
         }
     }
 
+    // 读取配置文件
     if( cfg_file[0] == '\0' )
     {
         log( LOG_ERR, __FILE__, __LINE__, "%s", "please specify the config file" );
@@ -93,8 +95,8 @@ int main( int argc, char* argv[] )
         log( LOG_ERR, __FILE__, __LINE__, "read config file met error: %s", strerror( errno ) );
         return 1;
     }
-    vector< host > balance_srv;
-    vector< host > logical_srv;
+    vector< host > balance_srv;     // 本机地址
+    vector< host > logical_srv;     // 实际的要负载均衡的主机地址
     host tmp_host;
     memset( tmp_host.m_hostname, '\0', 1024 );
     char* tmp_hostname;
@@ -107,6 +109,7 @@ int main( int argc, char* argv[] )
     char* tmp4 = NULL;
     /* The  strpbrk()  function  locates the first occurrence in the string s('\n') of any of */
     /* the bytes in the string(tmp) accept. */
+    // 解析配置文件
     while( tmp2 = strpbrk( tmp, "\n" ) )
     {
         *tmp2++ = '\0';

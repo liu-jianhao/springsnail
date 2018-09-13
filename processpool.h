@@ -39,6 +39,7 @@ class processpool
 private:
     processpool( int listenfd, int process_number = 8 );
 public:
+    // 返回一个线程池实例
     static processpool< C, H, M >* create( int listenfd, int process_number = 8 )
     {
         if( !m_instance )
@@ -99,7 +100,7 @@ static void addsig( int sig, void( handler )(int), bool restart = true )
 }
 
 template< typename C, typename H, typename M >
-processpool< C, H, M >::processpool( int listenfd, int process_number ) 
+processpool< C, H, M >::processpool( int listenfd, int process_number )
     : m_listenfd( listenfd ), m_process_number( process_number ), m_idx( -1 ), m_stop( false )
 {
     assert( ( process_number > 0 ) && ( process_number <= MAX_PROCESS_NUMBER ) );
@@ -109,17 +110,20 @@ processpool< C, H, M >::processpool( int listenfd, int process_number )
 
     for( int i = 0; i < process_number; ++i )
     {
+        // Unix domain
         int ret = socketpair( PF_UNIX, SOCK_STREAM, 0, m_sub_process[i].m_pipefd );
         assert( ret == 0 );
 
         m_sub_process[i].m_pid = fork();
         assert( m_sub_process[i].m_pid >= 0 );
+        // father
         if( m_sub_process[i].m_pid > 0 )
         {
             close( m_sub_process[i].m_pipefd[1] );
             m_sub_process[i].m_busy_ratio = 0;
             continue;
         }
+        // child
         else
         {
             close( m_sub_process[i].m_pipefd[0] );
@@ -178,7 +182,7 @@ template< typename C, typename H, typename M >
 void processpool< C, H, M >::notify_parent_busy_ratio( int pipefd, M* manager )
 {
     int msg = manager->get_used_conn_cnt();
-    send( pipefd, ( char* )&msg, 1, 0 );    
+    send( pipefd, ( char* )&msg, 1, 0 );
 }
 
 template< typename C, typename H, typename M >
@@ -219,7 +223,7 @@ void processpool< C, H, M >::run_child( const vector<H>& arg )
             {
                 int client = 0;
                 ret = recv( sockfd, ( char* )&client, sizeof( client ), 0 );
-                if( ( ( ret < 0 ) && ( errno != EAGAIN ) ) || ret == 0 ) 
+                if( ( ( ret < 0 ) && ( errno != EAGAIN ) ) || ret == 0 )
                 {
                     continue;
                 }
@@ -365,7 +369,7 @@ void processpool< C, H, M >::run_parent()
                     i = (i+1)%m_process_number;
                 }
                 while( i != sub_process_counter );
-                
+
                 if( m_sub_process[i].m_pid == -1 )
                 {
                     m_stop = true;

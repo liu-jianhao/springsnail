@@ -31,6 +31,7 @@ int mgr::conn2srv( const sockaddr_in& address )
 
     if ( connect( sockfd, ( struct sockaddr* )&address, sizeof( address ) ) != 0  )
     {
+        log(LOG_INFO, __FILE__, __LINE__, "connect error");
         close( sockfd );
         return -1;
     }
